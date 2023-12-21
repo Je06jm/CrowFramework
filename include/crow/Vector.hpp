@@ -7,7 +7,7 @@
 
 namespace crow {
 
-    template <typename T=double>
+    template <typename T = double>
     struct API Vector2 {
         union {
             T x;
@@ -20,16 +20,19 @@ namespace crow {
         };
 
         inline constexpr Vector2() : x{0}, y{0} {}
+
         inline constexpr Vector2(T x, T y) : x{x}, y{y} {}
+
         inline constexpr Vector2(const Vector2& v) : x{v.x}, y{v.y} {}
-        
+
         inline constexpr Vector2& operator=(const Vector2& v) {
             x = v.x;
             y = v.y;
             return *this;
         }
 
-        inline constexpr friend Vector2 operator+(const Vector2& lhs, const Vector2& rhs) {
+        inline constexpr friend Vector2 operator+(const Vector2& lhs,
+                                                  const Vector2& rhs) {
             return {lhs.x + rhs.x, lhs.y + rhs.y};
         }
 
@@ -49,7 +52,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector2 operator-(const Vector2& lhs, const Vector2& rhs) {
+        inline constexpr friend Vector2 operator-(const Vector2& lhs,
+                                                  const Vector2& rhs) {
             return {lhs.x - rhs.x, lhs.y - rhs.y};
         }
 
@@ -69,7 +73,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector2 operator*(const Vector2& lhs, const Vector2& rhs) {
+        inline constexpr friend Vector2 operator*(const Vector2& lhs,
+                                                  const Vector2& rhs) {
             return {lhs.x * rhs.x, lhs.y * rhs.y};
         }
 
@@ -89,7 +94,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector2 operator/(const Vector2& lhs, const Vector2& rhs) {
+        inline constexpr friend Vector2 operator/(const Vector2& lhs,
+                                                  const Vector2& rhs) {
             return {lhs.x / rhs.x, lhs.y / rhs.y};
         }
 
@@ -109,7 +115,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector2 operator%(const Vector2& lhs, const Vector2& rhs) {
+        inline constexpr friend Vector2 operator%(const Vector2& lhs,
+                                                  const Vector2& rhs) {
             return {modf(lhs.x, rhs.x), modf(lhs.y, rhs.y)};
         }
 
@@ -136,30 +143,21 @@ namespace crow {
         }
 
         inline constexpr T& operator[](size_t index) {
-            T* arr[] = { &x, &y };
+            T* arr[] = {&x, &y};
             return *arr[index];
         }
 
         inline constexpr T operator[](size_t index) const {
-            T* arr[] = { &x, &y };
+            T* arr[] = {&x, &y};
             return *arr[index];
         }
 
+        inline constexpr double LengthSquared() const { return x * x + y * y; }
 
-        inline constexpr double LengthSquared() const {
-            return x * x + y * y;
-        }
+        inline constexpr double Length() const { return sqrt(LengthSquared()); }
 
-        inline constexpr double Length() const {
-            return sqrt(LengthSquared());
-        }
+        inline constexpr Vector2 Normalize() const { return *this / Length(); }
 
-        
-        inline constexpr Vector2 Normalize() const {
-            return *this / Length();
-        }
-
-        
         inline constexpr double Dot(const Vector2& v) const {
             return x * v.x + y * v.y;
         }
@@ -182,7 +180,7 @@ namespace crow {
         static constexpr Vector2 RIGHT = {1, 0};
     };
 
-    template <typename T=double>
+    template <typename T = double>
     struct API Vector3 {
         union {
             T x;
@@ -200,9 +198,11 @@ namespace crow {
         };
 
         inline constexpr Vector3() : x{0}, y{0}, z{0} {}
+
         inline constexpr Vector3(T x, T y, T z) : x{x}, y{y}, z{z} {}
+
         inline constexpr Vector3(const Vector3& v) : x{v.x}, y{v.y}, z{v.z} {}
-        
+
         inline constexpr Vector3& operator=(const Vector3& v) {
             x = v.x;
             y = v.y;
@@ -210,7 +210,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector3 operator+(const Vector3& lhs, const Vector3& rhs) {
+        inline constexpr friend Vector3 operator+(const Vector3& lhs,
+                                                  const Vector3& rhs) {
             return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
         }
 
@@ -232,7 +233,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector3 operator-(const Vector3& lhs, const Vector3& rhs) {
+        inline constexpr friend Vector3 operator-(const Vector3& lhs,
+                                                  const Vector3& rhs) {
             return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
         }
 
@@ -254,7 +256,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector3 operator*(const Vector3& lhs, const Vector3& rhs) {
+        inline constexpr friend Vector3 operator*(const Vector3& lhs,
+                                                  const Vector3& rhs) {
             return {lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z};
         }
 
@@ -276,7 +279,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector3 operator/(const Vector3& lhs, const Vector3& rhs) {
+        inline constexpr friend Vector3 operator/(const Vector3& lhs,
+                                                  const Vector3& rhs) {
             return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z};
         }
 
@@ -298,7 +302,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector3 operator%(const Vector3& lhs, const Vector3& rhs) {
+        inline constexpr friend Vector3 operator%(const Vector3& lhs,
+                                                  const Vector3& rhs) {
             return {modf(lhs.x, rhs.x), modf(lhs.y, rhs.y), modf(lhs.z, rhs.z)};
         }
 
@@ -337,21 +342,14 @@ namespace crow {
             return *arr[index];
         }
 
-
         inline constexpr double LengthSquared() const {
             return x * x + y * y + z * z;
         }
 
-        inline constexpr double Length() const {
-            return sqrt(LengthSquared());
-        }
+        inline constexpr double Length() const { return sqrt(LengthSquared()); }
 
-        
-        inline constexpr Vector3 Normalize() const {
-            return *this / Length();
-        }
+        inline constexpr Vector3 Normalize() const { return *this / Length(); }
 
-        
         inline constexpr double Dot(const Vector3& v) const {
             return x * v.x + y * v.y + z * v.z;
         }
@@ -372,15 +370,11 @@ namespace crow {
         }
 
         inline constexpr Vector3 Cross(const Vector3& v) const {
-            return {
-                y * v.z - z * v.y,
-                z * v.x - x * v.z,
-                x * v.y - y * v.x
-            }
+            return { y *v.z - z *v.y, z *v.x - x *v.z, x *v.y - y *v.x }
         }
     };
 
-    template <typename T=double>
+    template <typename T = double>
     struct API Vector4 {
         union {
             T x;
@@ -400,12 +394,23 @@ namespace crow {
         union {
             T w;
             T a;
+
         }
 
-        inline constexpr Vector4() : x{0}, y{0}, z{0}, w{0} {}
+        inline constexpr Vector4()
+            : x{0},
+              y{0},
+              z{0},
+              w{0} {}
+
         inline constexpr Vector4(T x, T y, T z, T w) : x{x}, y{y}, z{z}, w{w} {}
-        inline constexpr Vector4(const Vector4& v) : x{v.x}, y{v.y}, z{v.z}, w{w} {}
-        
+
+        inline constexpr Vector4(const Vector4& v)
+            : x{v.x},
+              y{v.y},
+              z{v.z},
+              w{w} {}
+
         inline constexpr Vector4& operator=(const Vector4& v) {
             x = v.x;
             y = v.y;
@@ -414,7 +419,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector4 operator+(const Vector4& lhs, const Vector4& rhs) {
+        inline constexpr friend Vector4 operator+(const Vector4& lhs,
+                                                  const Vector4& rhs) {
             return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w};
         }
 
@@ -438,7 +444,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector4 operator-(const Vector4& lhs, const Vector4& rhs) {
+        inline constexpr friend Vector4 operator-(const Vector4& lhs,
+                                                  const Vector4& rhs) {
             return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w};
         }
 
@@ -462,7 +469,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector4 operator*(const Vector4& lhs, const Vector4& rhs) {
+        inline constexpr friend Vector4 operator*(const Vector4& lhs,
+                                                  const Vector4& rhs) {
             return {lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w};
         }
 
@@ -486,7 +494,8 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector4 operator/(const Vector4& lhs, const Vector4& rhs) {
+        inline constexpr friend Vector4 operator/(const Vector4& lhs,
+                                                  const Vector4& rhs) {
             return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w};
         }
 
@@ -510,8 +519,10 @@ namespace crow {
             return *this;
         }
 
-        inline constexpr friend Vector4 operator%(const Vector4& lhs, const Vector4& rhs) {
-            return {modf(lhs.x, rhs.x), modf(lhs.y, rhs.y), modf(lhs.z, rhs.z), modf(lhs.w, rhs.w)};
+        inline constexpr friend Vector4 operator%(const Vector4& lhs,
+                                                  const Vector4& rhs) {
+            return {modf(lhs.x, rhs.x), modf(lhs.y, rhs.y), modf(lhs.z, rhs.z),
+                    modf(lhs.w, rhs.w)};
         }
 
         inline constexpr Vector4& operator%=(const Vector4& v) {
@@ -523,7 +534,8 @@ namespace crow {
         }
 
         inline constexpr friend Vector4 operator%(const Vector4& lhs, T rhs) {
-            return {modf(lhs.x, rhs), modf(lhs.y, rhs), modf(lhs.z, rhs), modf(lhs.w, rhs)};
+            return {modf(lhs.x, rhs), modf(lhs.y, rhs), modf(lhs.z, rhs),
+                    modf(lhs.w, rhs)};
         }
 
         inline constexpr Vector4& operator%=(T s) {
@@ -552,21 +564,14 @@ namespace crow {
             return *arr[index];
         }
 
-
         inline constexpr double LengthSquared() const {
             return x * x + y * y + z * z + w * w;
         }
 
-        inline constexpr double Length() const {
-            return sqrt(LengthSquared());
-        }
+        inline constexpr double Length() const { return sqrt(LengthSquared()); }
 
-        
-        inline constexpr Vector4 Normalize() const {
-            return *this / Length();
-        }
+        inline constexpr Vector4 Normalize() const { return *this / Length(); }
 
-        
         inline constexpr double Dot(const Vector4& v) const {
             return x * v.x + y * v.y + z * v.z + w * v.w;
         }

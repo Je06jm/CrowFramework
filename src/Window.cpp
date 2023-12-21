@@ -16,16 +16,12 @@ namespace crow {
         bool fullscreen = false;
 
         std::string title = "Crow Framework";
-    
+
     public:
-        CrossWindow() {
-            glfwInit();
-        }
+        CrossWindow() { glfwInit(); }
 
         ~CrossWindow() {
-            if (window != nullptr) {
-                glfwDestroyWindow(window);
-            }
+            if (window != nullptr) { glfwDestroyWindow(window); }
 
             glfwTerminate();
         }
@@ -39,9 +35,7 @@ namespace crow {
             width = x;
             height = y;
 
-            if (window) {
-                glfwSetWindowSize(window, x, y);
-            }
+            if (window) { glfwSetWindowSize(window, x, y); }
         }
 
         std::tuple<int, int> GetResolution() const override {
@@ -62,27 +56,22 @@ namespace crow {
                 auto monitor = glfwGetPrimaryMonitor();
                 auto mode = glfwGetVideoMode(monitor);
 
-                glfwSetWindowMonitor(window, fullscreen ? monitor : nullptr, 0, 0, width, height, mode->refreshRate);
+                glfwSetWindowMonitor(window, fullscreen ? monitor : nullptr, 0,
+                                     0, width, height, mode->refreshRate);
 
                 if (!fullscreen) Center();
             }
         }
 
-        bool IsFullscreen() const override {
-            return fullscreen;
-        }
+        bool IsFullscreen() const override { return fullscreen; }
 
         void SetTitle(const std::string& title) override {
             this->title = title;
 
-            if (window) {
-                glfwSetWindowTitle(window, title.c_str());
-            }
+            if (window) { glfwSetWindowTitle(window, title.c_str()); }
         }
 
-        std::string GetTitle() const {
-            return title;
-        }
+        std::string GetTitle() const { return title; }
 
         void Center() override {
             if (!window) return;
@@ -108,7 +97,8 @@ namespace crow {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-            window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+            window = glfwCreateWindow(width, height, title.c_str(), nullptr,
+                                      nullptr);
 
             if (!window) return false;
 

@@ -1,20 +1,20 @@
 #ifndef CROW_ACTOR_HPP
 #define CROW_ACTOR_HPP
 
-#include <vector>
-#include <mutex>
-#include <memory>
 #include <atomic>
+#include <memory>
+#include <mutex>
 #include <random>
 #include <thread>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
+#include <vector>
 
-#include "TypeTraits.hpp"
 #include "Attribute.hpp"
-#include "ReadWriteLock.hpp"
 #include "Crow.hpp"
+#include "ReadWriteLock.hpp"
+#include "TypeTraits.hpp"
 
 namespace crow {
 
@@ -34,7 +34,7 @@ namespace crow {
         friend class ActorBase;
 
         friend class _InternalActorManagerBase;
-    
+
     private:
         _InternalActorManagerBase* manager = nullptr;
 
@@ -42,16 +42,14 @@ namespace crow {
         bool is_free_queued = false;
 
         virtual void Receive(std::unique_ptr<MessageBase> msg) = 0;
-        
+
         virtual bool ProcessOneMessage() = 0;
         virtual bool HasMessages() const = 0;
 
         virtual void RedistributeMessages() = 0;
-    
+
     protected:
-        void QueueFree() {
-            is_free_queued = true;
-        }
+        void QueueFree() { is_free_queued = true; }
 
         template <typename T>
         void Spawn();
@@ -60,7 +58,7 @@ namespace crow {
         void SendMessage(T&& msg);
 
         ActorScheduler* scheduler = nullptr;
-    
+
     public:
         virtual ~_InternalActorBase() {}
     };
@@ -79,7 +77,7 @@ namespace crow {
 
     protected:
         ActorScheduler* scheduler = nullptr;
-    
+
     public:
         virtual ~_InternalActorManagerBase() {}
 
@@ -104,13 +102,14 @@ namespace crow {
 
         template <typename J>
         friend class ActorBase;
-    
+
     private:
         std::vector<std::unique_ptr<T>> mailbox;
 
         void Receive(std::unique_ptr<MessageBase> msg) override {
             std::lock_guard<std::mutex> guard(process_lock);
-            auto derived_msg = std::unique_ptr<T>(static_cast<T*>(msg.release()));
+            auto derived_msg =
+                std::unique_ptr<T>(static_cast<T*>(msg.release()));
             mailbox.emplace_back(std::move(derived_msg));
         }
 
@@ -142,7 +141,7 @@ namespace crow {
 
             for (size_t i = 0; i < mailbox.size(); i++) {
                 auto msg = std::move(mailbox[i]);
-                
+
                 if (!manager->HasActors()) break;
 
                 manager->Receive(std::move(msg));
@@ -151,7 +150,7 @@ namespace crow {
 
     protected:
         virtual void HandleMessage(std::unique_ptr<T> msg) = 0;
-    
+
     public:
         virtual ~ActorBase() {}
     };
@@ -160,7 +159,7 @@ namespace crow {
     class API ActorManagerBase : public _InternalActorManagerBase {
         template <typename J>
         friend class ActorBase;
-    
+
     private:
         using MessageType = InheritedDataType<T>;
 
@@ -175,8 +174,9 @@ namespace crow {
         void Receive(std::unique_ptr<MessageBase> msg) override {
             std::lock_guard<std::mutex> guard(actors_lock);
 
-            std::uniform_int_distribution<size_t> rand_actor(0, actors.size() - 1);
-            
+            std::uniform_int_distribution<size_t> rand_actor(0,
+                                                             actors.size() - 1);
+
             size_t index = rand_actor(gen);
             actors[index]->Receive(std::move(msg));
         }
@@ -196,7 +196,7 @@ namespace crow {
 
                 if (actor->ProcessOneMessage()) {
                     guard.lock();
-                    
+
                     if (actor->is_free_queued) {
                         for (size_t j = 0; j < actors.size(); j++) {
                             if (actors[j].get() == actor) {
@@ -224,19 +224,17 @@ namespace crow {
                 std::lock_guard<std::mutex> guard(actors_lock);
 
                 for (size_t i = 0; i < actors.size(); i++) {
-                    if (actors[i]->HasMessages()) {
-                        return true;
-                    }
+                    if (actors[i]->HasMessages()) { return true; }
                 }
             }
 
             return false;
         }
-    
+
     public:
         void SpawnOne() override {
             auto actor = std::unique_ptr<_InternalActorBase>(new T);
-            
+
             actor->manager = static_cast<_InternalActorManagerBase*>(this);
             actor->scheduler = scheduler;
 
@@ -251,7 +249,9 @@ namespace crow {
         static std::unordered_map<Attribute, ActorScheduler*> schedulers;
 
         mutable ReadWriteLock managers_lock;
-        std::unordered_map<std::type_index, std::unique_ptr<_InternalActorManagerBase>> managers;
+        std::unordered_map<std::type_index,
+                           std::unique_ptr<_InternalActorManagerBase>>
+            managers;
 
         std::vector<std::thread> threads;
 
@@ -263,6 +263,7 @@ namespace crow {
         ActorScheduler(const Attribute& attribute, size_t thread_count);
 
         bool ProcessOneMessage();
+
     public:
         const Attribute& attribute;
         const size_t thread_count;
@@ -282,7 +283,8 @@ namespace crow {
                 managers_lock.UnlockReading();
                 managers_lock.LockWriting();
 
-                managers[index] = std::unique_ptr<_InternalActorManagerBase>(new ActorManagerBase<T>);
+                managers[index] = std::unique_ptr<_InternalActorManagerBase>(
+                    new ActorManagerBase<T>);
                 managers[index]->scheduler = this;
 
                 managers_lock.UnlockWriting();
@@ -293,14 +295,12 @@ namespace crow {
             managers_lock.UnlockReading();
         }
 
-        inline void Stop() {
-            running = false;
-        }
+        inline void Stop() { running = false; }
 
         template <typename T>
         void SendMessage(T&& message) {
             static_assert(std::is_base_of_v<MessageBase, T>);
-            
+
             std::type_index index{typeid(T)};
 
             auto msg = std::unique_ptr<MessageBase>(new T(std::move(message)));
@@ -322,14 +322,16 @@ namespace crow {
         }
 
         void Run(bool until_empty = false);
-        
+
         void BlockUntilEmpty() const;
 
         static ActorScheduler* GetScheduler(const Attribute& attribute);
 
-        static std::unique_ptr<ActorScheduler> CreateNewScheduler(const Attribute& attribute, size_t thread_count);
-        
-        inline static std::unique_ptr<ActorScheduler> CreateNewScheduler(size_t thread_count) {
+        static std::unique_ptr<ActorScheduler>
+        CreateNewScheduler(const Attribute& attribute, size_t thread_count);
+
+        inline static std::unique_ptr<ActorScheduler>
+        CreateNewScheduler(size_t thread_count) {
             return CreateNewScheduler(ATTRIBUTE_ACTOR_REGULAR, thread_count);
         }
     };

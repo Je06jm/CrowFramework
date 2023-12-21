@@ -1,9 +1,9 @@
 #ifndef CROW_WINDOW_HPP
 #define CROW_WINDOW_HPP
 
-#include <tuple>
-#include <string>
 #include <memory>
+#include <string>
+#include <tuple>
 
 #include "Actor.hpp"
 

@@ -7,9 +7,10 @@ namespace crow {
 
     template <template <typename> class C, typename T>
     T _InternalInheritedDataType(const C<T>*);
-    
+
     template <typename T>
-    using InheritedDataType = decltype(_InternalInheritedDataType(std::declval<T*>()));
+    using InheritedDataType =
+        decltype(_InternalInheritedDataType(std::declval<T*>()));
 
 }
 

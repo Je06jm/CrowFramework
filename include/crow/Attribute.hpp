@@ -1,58 +1,61 @@
 #ifndef CROW_ATTRIBUTE_HPP
 #define CROW_ATTRIBUTE_HPP
 
+#include <cstdint>
 #include <set>
 #include <string>
-#include <cstdint>
 
 #include "Crow.hpp"
 
 #define CROW_ATTRIBUTE(name) extern const API Attribute name
-#define CROW_DEFINE_ATTRIBUTE(name) const Attribute name = Attribute::CreateNew(#name)
+#define CROW_DEFINE_ATTRIBUTE(name) \
+    const Attribute name = Attribute::CreateNew(#name)
 
 namespace crow {
 
     struct API Attribute {
         using ID = uint32_t;
-    
+
     private:
         ID id;
 
         std::string name;
 
     public:
-        inline ID GetID() const {
-            return id;
-        }
+        inline ID GetID() const { return id; }
 
-        inline std::string GetName() const {
-            return name;
-        }
+        inline std::string GetName() const { return name; }
 
-        inline friend bool operator==(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator==(const Attribute& lhs,
+                                      const Attribute& rhs) {
             return lhs.id == rhs.id;
         }
 
-        inline friend bool operator!=(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator!=(const Attribute& lhs,
+                                      const Attribute& rhs) {
             return lhs.id != rhs.id;
         }
 
-        inline friend bool operator<(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator<(const Attribute& lhs,
+                                     const Attribute& rhs) {
             return lhs.id < rhs.id;
         }
 
-        inline friend bool operator>(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator>(const Attribute& lhs,
+                                     const Attribute& rhs) {
             return lhs.id > rhs.id;
         }
 
-        inline friend bool operator<=(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator<=(const Attribute& lhs,
+                                      const Attribute& rhs) {
             return lhs.id <= rhs.id;
         }
 
-        inline friend bool operator>=(const Attribute& lhs, const Attribute& rhs) {
+        inline friend bool operator>=(const Attribute& lhs,
+                                      const Attribute& rhs) {
             return lhs.id >= rhs.id;
         }
-    
+
     private:
         static ID next_free_id;
 
@@ -67,7 +70,7 @@ namespace crow {
     class API AttributeHolder {
     private:
         std::set<Attribute> attributes;
-    
+
     protected:
         AttributeHolder() {}
 

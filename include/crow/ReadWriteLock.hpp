@@ -12,7 +12,7 @@ namespace crow {
     private:
         std::atomic<uint32_t> readers = 0;
         std::mutex lock;
-    
+
     public:
         ReadWriteLock() = default;
 
@@ -28,9 +28,7 @@ namespace crow {
             lock.unlock();
         }
 
-        inline void UnlockReading() {
-            readers--;
-        }
+        inline void UnlockReading() { readers--; }
 
         inline void LockWriting() {
             while (true) {
@@ -40,9 +38,7 @@ namespace crow {
             }
         }
 
-        inline void UnlockWriting() {
-            lock.unlock();
-        }
+        inline void UnlockWriting() { lock.unlock(); }
     };
 
 };

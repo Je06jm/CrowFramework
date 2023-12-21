@@ -15,9 +15,12 @@ namespace crow {
     std::mutex ActorScheduler::schedulers_lock;
     std::unordered_map<Attribute, ActorScheduler*> ActorScheduler::schedulers;
 
-    ActorScheduler::ActorScheduler(const Attribute& attribute, size_t thread_count) : attribute{attribute}, thread_count{thread_count} {
+    ActorScheduler::ActorScheduler(const Attribute& attribute,
+                                   size_t thread_count)
+        : attribute{attribute},
+          thread_count{thread_count} {
         gen = std::mt19937(rd());
-        
+
         for (size_t i = 0; i < thread_count; i++) {
             threads.emplace_back([&]() {
                 while (running) {
@@ -50,9 +53,7 @@ namespace crow {
 
     ActorScheduler::~ActorScheduler() {
         running = false;
-        for (auto& thread : threads) {
-            thread.join();
-        }
+        for (auto& thread : threads) { thread.join(); }
     }
 
     void ActorScheduler::Run(bool until_empty) {
@@ -72,7 +73,7 @@ namespace crow {
     void ActorScheduler::BlockUntilEmpty() const {
         while (running) {
             managers_lock.LockReading();
-            
+
             bool has_messages = false;
             for (auto& manager : managers) {
                 if (manager.second->HasMessages()) {
@@ -89,18 +90,21 @@ namespace crow {
 
     ActorScheduler* ActorScheduler::GetScheduler(const Attribute& attribute) {
         std::lock_guard<std::mutex> guard(schedulers_lock);
-        
+
         if (schedulers.find(attribute) == schedulers.end()) return nullptr;
 
         return schedulers[attribute];
     }
 
-    std::unique_ptr<ActorScheduler> ActorScheduler::CreateNewScheduler(const Attribute& attribute, size_t thread_count) {
-        auto scheduler = std::unique_ptr<ActorScheduler>(new ActorScheduler(attribute, thread_count));
+    std::unique_ptr<ActorScheduler>
+    ActorScheduler::CreateNewScheduler(const Attribute& attribute,
+                                       size_t thread_count) {
+        auto scheduler = std::unique_ptr<ActorScheduler>(
+            new ActorScheduler(attribute, thread_count));
 
         {
             std::lock_guard<std::mutex> guard(schedulers_lock);
-            
+
             if (schedulers.find(attribute) != schedulers.end()) {
                 // TODO Error here
             }
