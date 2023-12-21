@@ -354,7 +354,7 @@ namespace crow {
         scheduler->SendMessage(std::move(msg));
     }
 
-    struct MessageBase {};
+    struct API MessageBase {};
 
 }
 

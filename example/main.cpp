@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <crow/Actor.hpp>
-#include <crow/ReadWriteLock.hpp>
+#include <crow/Window.hpp>
 
 struct AMessage : public crow::MessageBase {
     int num;
@@ -32,11 +32,8 @@ public:
     }
 };
 
-//crow::ActorScheduler scheduler;
 
 int main() {
-    std::cout << "I'm running" << std::endl;
-
     auto a_scheduler = crow::ActorScheduler::CreateNewScheduler(1);
 
     a_scheduler->Spawn<AActor>();
@@ -45,12 +42,18 @@ int main() {
 
     b_scheduler->Spawn<BActor>();
 
+    auto window = crow::Window::CreateWindow();
+    window->Create();
+
     AMessage msg;
     msg.num = 1;
 
     a_scheduler->SendMessage(std::move(msg));
 
-    //scheduler->Run(true);
+    while (!window->ShouldClose()) {
+        window->Update();
+    }
+    
     a_scheduler->BlockUntilEmpty();
     b_scheduler->BlockUntilEmpty();
 }

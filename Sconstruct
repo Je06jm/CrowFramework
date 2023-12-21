@@ -1,14 +1,57 @@
+import os
+
+def exclude_files(pattern, files):
+    return [f for f in files if not os.path.basename(str(f)).startswith(pattern)]
+
+def only_files(pattern, files):
+    return [f for f in files if os.path.basename(str(f)).startswith(pattern)]
+
 env = Environment(tools=['mingw'])
 
 env['CXXFLAGS'] = '-std=c++17 -Wall -Wextra'
 
-src_files = Glob('src/*.cpp')
+src_files = Glob('src/*.cpp') + Glob('thirdparties/glad/src/*.c')
+glfw_files = Glob('thirdparties/glfw/src/*.c')
 
-inc_dirs = ['include']
+glfw_win_files = only_files('win32_', glfw_files)
+glfw_files = exclude_files('win32_', glfw_files)
+
+glfw_cocoa_files = only_files('cocoa_', glfw_files)
+glfw_files = exclude_files('cocoa_', glfw_files)
+
+glfw_macos_files = only_files('nsgl_', glfw_files)
+glfw_files = exclude_files('nsgl_', glfw_files)
+
+glfw_poxis_files = only_files('posix_', glfw_files)
+glfw_files = exclude_files('posix_', glfw_files)
+
+glfw_linux_files = only_files('linux_', glfw_files)
+glfw_linux_files += only_files('glx_', glfw_files)
+glfw_linux_files += only_files('xkb_', glfw_files)
+
+glfw_files = exclude_files('linux_', glfw_files)
+glfw_files = exclude_files('glx_', glfw_files)
+glfw_files = exclude_files('xkb_', glfw_files)
+
+glfw_wayland_files = only_files('wl_', glfw_files)
+glfw_files = exclude_files('wl_', glfw_files)
+
+glfw_x11_files = only_files('x11_', glfw_files)
+glfw_files = exclude_files('x11_', glfw_files)
+
+glfw_null_files = only_files('null_', glfw_files)
+glfw_files = exclude_files('null_', glfw_files)
+
+inc_dirs = ['include', 'thirdparties/glfw/include', 'thirdparties/glad/include']
 env.Append(CPPPATH=inc_dirs)
 
+libs = []
+
 if env['PLATFORM'] == 'win32' or env['PLATFORM'] == 'win64':
-    env.Append(CPPFLAGS=['-DWINDOWS', '-DEXPORT'])
+    env.Append(CPPFLAGS=['-DWINDOWS', '-DEXPORT', '-D_GLFW_WIN32', '-D_CRT_SECURE_NO_WARNINGS'])
+    glfw_files += glfw_win_files
+    
+    libs += ['gdi32', 'user32', 'kernel32', 'shell32', 'opengl32']
 
 target = ARGUMENTS.get('target', 'distribute')
 
@@ -21,7 +64,7 @@ elif target == 'release':
 elif target == 'distribute':
     env.Append(CXXFLAGS=' -O2')
 
-crow_lib = env.SharedLibrary(target='crow', source=src_files)
+crow_lib = env.SharedLibrary(target='crow', source=src_files + glfw_files, LIBS=libs)
 
 example_files = Glob('example/*.cpp')
 
