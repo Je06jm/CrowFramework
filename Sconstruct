@@ -1,0 +1,28 @@
+env = Environment(tools=['mingw'])
+
+env['CXXFLAGS'] = '-std=c++17 -Wall -Wextra'
+
+src_files = Glob('src/*.cpp')
+
+inc_dirs = ['include']
+env.Append(CPPPATH=inc_dirs)
+
+if env['PLATFORM'] == 'win32' or env['PLATFORM'] == 'win64':
+    env.Append(CPPFLAGS=['-DWINDOWS', '-DEXPORT'])
+
+target = ARGUMENTS.get('target', 'distribute')
+
+if target == 'debug':
+    env.Append(CXXFLAGS=' -g -DDEBUG')
+
+elif target == 'release':
+    env.Append(CXXFLAGS=' -g -O2')
+
+elif target == 'distribute':
+    env.Append(CXXFLAGS=' -O2')
+
+crow_lib = env.SharedLibrary(target='crow', source=src_files)
+
+example_files = Glob('example/*.cpp')
+
+example_prog = env.Program(target='example', source=example_files, LIBS=['crow'], LIBPATH=['./'])

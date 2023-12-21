@@ -5,15 +5,29 @@
 #include <string>
 #include <cstdint>
 
-#define CROW_ATTRIBUTE(name) Attribute name = Attribute::CreateNew(#name)
+#include "Crow.hpp"
+
+#define CROW_ATTRIBUTE(name) extern const API Attribute name
+#define CROW_DEFINE_ATTRIBUTE(name) const Attribute name = Attribute::CreateNew(#name)
 
 namespace crow {
 
-    struct Attribute {
+    struct API Attribute {
         using ID = uint32_t;
-        const ID id;
+    
+    private:
+        ID id;
 
-        const std::string name;
+        std::string name;
+
+    public:
+        inline ID GetID() const {
+            return id;
+        }
+
+        inline std::string GetName() const {
+            return name;
+        }
 
         inline friend bool operator==(const Attribute& lhs, const Attribute& rhs) {
             return lhs.id == rhs.id;
@@ -22,36 +36,53 @@ namespace crow {
         inline friend bool operator!=(const Attribute& lhs, const Attribute& rhs) {
             return lhs.id != rhs.id;
         }
+
+        inline friend bool operator<(const Attribute& lhs, const Attribute& rhs) {
+            return lhs.id < rhs.id;
+        }
+
+        inline friend bool operator>(const Attribute& lhs, const Attribute& rhs) {
+            return lhs.id > rhs.id;
+        }
+
+        inline friend bool operator<=(const Attribute& lhs, const Attribute& rhs) {
+            return lhs.id <= rhs.id;
+        }
+
+        inline friend bool operator>=(const Attribute& lhs, const Attribute& rhs) {
+            return lhs.id >= rhs.id;
+        }
     
     private:
         static ID next_free_id;
 
-        Attribute(const std::string& name) : id{next_free_id++}, name{name} {}
+        Attribute(ID id, const std::string& name) : id{id}, name{name} {}
 
     public:
         static inline Attribute CreateNew(const std::string& name) {
-            return {name};
+            return {next_free_id++, name};
         }
     };
 
-    class AttributeHolder {
+    class API AttributeHolder {
     private:
         std::set<Attribute> attributes;
     
     protected:
-        constexpr AttributeHolder() {}
+        AttributeHolder() {}
 
-        constexpr AttributeHolder(const std::set<Attribute>& attributes) {
+        AttributeHolder(const std::set<Attribute>& attributes) {
             for (const auto& attribute : attributes) {
                 this->attributes.insert(attribute);
             }
         }
 
-        constexpr void AddAttribute(const Attribute& attribute) {
+        void AddAttribute(const Attribute& attribute) {
             attributes.insert(attribute);
         }
 
-        inline constexpr bool HasAttribute(const Attribute& attribute) const {
+    public:
+        inline bool HasAttribute(const Attribute& attribute) const {
             return attributes.find(attribute) != attributes.end();
         }
     };
@@ -61,9 +92,9 @@ namespace crow {
 namespace std {
 
     template <>
-    struct hash<crow::Attribute> {
+    struct API hash<crow::Attribute> {
         inline std::size_t operator()(const crow::Attribute& attribute) const {
-            return std::hash<uint32_t>{}(attribute.id);
+            return std::hash<uint32_t>{}(attribute.GetID());
         }
     };
 

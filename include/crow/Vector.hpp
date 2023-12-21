@@ -3,10 +3,12 @@
 
 #include <cmath>
 
+#include "Crow.hpp"
+
 namespace crow {
 
     template <typename T=double>
-    struct Vector2 {
+    struct API Vector2 {
         union {
             T x;
             T u;
@@ -181,7 +183,7 @@ namespace crow {
     };
 
     template <typename T=double>
-    struct Vector3 {
+    struct API Vector3 {
         union {
             T x;
             T r;
@@ -379,7 +381,7 @@ namespace crow {
     };
 
     template <typename T=double>
-    struct Vector4 {
+    struct API Vector4 {
         union {
             T x;
             T r;
