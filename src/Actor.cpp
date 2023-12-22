@@ -8,9 +8,9 @@
 
 namespace crow {
 
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_RENDERING);
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_NON_CRITICAL);
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_REGULAR);
+    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
+    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_NON_CRITICAL);
+    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_REGULAR);
 
     std::mutex ActorScheduler::schedulers_lock;
     std::unordered_map<Attribute, ActorScheduler*> ActorScheduler::schedulers;
@@ -51,10 +51,7 @@ namespace crow {
         return false;
     }
 
-    ActorScheduler::~ActorScheduler() {
-        running = false;
-        for (auto& thread : threads) { thread.join(); }
-    }
+    ActorScheduler::~ActorScheduler() { Stop(); }
 
     void ActorScheduler::Run(bool until_empty) {
         while (running) {
