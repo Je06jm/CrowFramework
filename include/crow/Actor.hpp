@@ -163,7 +163,12 @@ namespace crow {
         template <typename J>
         friend class ActorBase;
 
+        friend class ActorScheduler;
+
     private:
+        /// @brief The type of message that the actors can accept
+        using MessageType = T;
+
         /// @brief A list of messages
         std::vector<std::unique_ptr<T>> mailbox;
 
@@ -239,7 +244,7 @@ namespace crow {
 
     private:
         /// @brief The type of message that the actors can accept
-        using MessageType = InheritedDataType<T>;
+        using MessageType = typename T::MessageType;
 
         static_assert(std::is_base_of_v<ActorBase<MessageType>, T>);
 
@@ -396,7 +401,7 @@ namespace crow {
         /// @tparam T The actor type to spawn
         template <typename T>
         void Spawn() {
-            using MessageType = InheritedDataType<T>;
+            using MessageType = typename T::MessageType;
 
             static_assert(std::is_base_of_v<ActorBase<MessageType>, T>);
 

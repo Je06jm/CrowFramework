@@ -20,7 +20,7 @@ public:
         bmsg.data = msg->num + 10;
 
         auto b_scheduler =
-            crow::ActorScheduler::GetScheduler(crow::ATTRIBUTE_ACTOR_RENDERING);
+            crow::ActorScheduler::GetScheduler(crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
 
         b_scheduler->SendMessage(std::move(bmsg));
     }
@@ -39,7 +39,7 @@ int main() {
     a_scheduler->Spawn<AActor>();
 
     auto b_scheduler = crow::ActorScheduler::CreateNewScheduler(
-        crow::ATTRIBUTE_ACTOR_RENDERING, 1);
+        crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING, 1);
 
     b_scheduler->Spawn<BActor>();
 
