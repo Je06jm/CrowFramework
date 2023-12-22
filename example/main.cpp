@@ -3,6 +3,8 @@
 #include <crow/Actor.hpp>
 #include <crow/Window.hpp>
 
+#include <thread>
+
 struct AMessage : public crow::MessageBase {
     int num;
 };
@@ -19,8 +21,8 @@ public:
         BMessage bmsg;
         bmsg.data = msg->num + 10;
 
-        auto b_scheduler =
-            crow::ActorScheduler::GetScheduler(crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
+        auto b_scheduler = crow::ActorScheduler::GetScheduler(
+            crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
 
         b_scheduler->SendMessage(std::move(bmsg));
     }
@@ -34,14 +36,18 @@ public:
 };
 
 int main() {
-    auto a_scheduler = crow::ActorScheduler::CreateNewScheduler(1);
+    auto a_scheduler = crow::ActorScheduler::CreateNewScheduler();
 
     a_scheduler->Spawn<AActor>();
 
+    auto a_processor = std::jthread([&]() { a_scheduler->Run(); });
+
     auto b_scheduler = crow::ActorScheduler::CreateNewScheduler(
-        crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING, 1);
+        crow::ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
 
     b_scheduler->Spawn<BActor>();
+
+    auto b_processor = std::jthread([&]() { b_scheduler->Run(); });
 
     auto window = crow::Window::CreateWindow();
     window->Create();
@@ -55,4 +61,7 @@ int main() {
 
     a_scheduler->BlockUntilEmpty();
     b_scheduler->BlockUntilEmpty();
+
+    a_scheduler->Stop();
+    b_scheduler->Stop();
 }

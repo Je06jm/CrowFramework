@@ -15,28 +15,16 @@ namespace crow {
     std::mutex ActorScheduler::schedulers_lock;
     std::unordered_map<Attribute, ActorScheduler*> ActorScheduler::schedulers;
 
-    ActorScheduler::ActorScheduler(const Attribute& attribute,
-                                   size_t thread_count)
-        : attribute{attribute},
-          thread_count{thread_count} {
+    ActorScheduler::ActorScheduler(const Attribute& attribute)
+        : attribute{attribute} {
         gen = std::mt19937(rd());
-
-        for (size_t i = 0; i < thread_count; i++) {
-            threads.emplace_back([&]() {
-                while (running) {
-                    if (!ProcessOneMessage()) {
-#ifdef WINDOWS
-                        YieldProcessor();
-#else
-                        sched_yield();
-#endif
-                    }
-                }
-            });
-        }
     }
 
+    ActorScheduler::~ActorScheduler() {}
+
     bool ActorScheduler::ProcessOneMessage() {
+        if (!running) return false;
+
         managers_lock.LockReading();
 
         for (auto& manager : managers) {
@@ -50,8 +38,6 @@ namespace crow {
         managers_lock.UnlockReading();
         return false;
     }
-
-    ActorScheduler::~ActorScheduler() { Stop(); }
 
     void ActorScheduler::Run(bool until_empty) {
         while (running) {
@@ -94,10 +80,9 @@ namespace crow {
     }
 
     std::unique_ptr<ActorScheduler>
-    ActorScheduler::CreateNewScheduler(const Attribute& attribute,
-                                       size_t thread_count) {
-        auto scheduler = std::unique_ptr<ActorScheduler>(
-            new ActorScheduler(attribute, thread_count));
+    ActorScheduler::CreateNewScheduler(const Attribute& attribute) {
+        auto scheduler =
+            std::unique_ptr<ActorScheduler>(new ActorScheduler(attribute));
 
         {
             std::lock_guard<std::mutex> guard(schedulers_lock);

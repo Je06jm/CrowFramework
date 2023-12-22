@@ -8,7 +8,7 @@ def only_files(pattern, files):
 
 env = Environment(tools=['mingw'])
 
-env['CXXFLAGS'] = '-std=c++17 -Wall -Wextra'
+env['CXXFLAGS'] = '-std=c++20 -Wall -Wextra'
 
 src_files = Glob('src/*.cpp') + Glob('thirdparties/glad/src/*.c')
 glfw_files = Glob('thirdparties/glfw/src/*.c')

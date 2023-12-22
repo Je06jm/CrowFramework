@@ -5,7 +5,6 @@
 #include <memory>
 #include <mutex>
 #include <random>
-#include <thread>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
@@ -14,7 +13,6 @@
 #include "Attribute.hpp"
 #include "Crow.hpp"
 #include "ReadWriteLock.hpp"
-#include "TypeTraits.hpp"
 
 namespace crow {
 
@@ -365,9 +363,6 @@ namespace crow {
                            std::unique_ptr<_InternalActorManagerBase>>
             managers;
 
-        /// @brief A list of threads
-        std::vector<std::thread> threads;
-
         /// @brief Used to determine a random manager
         std::random_device rd;
 
@@ -379,20 +374,11 @@ namespace crow {
 
         /// @brief Set the const variables. Also spawn the threads
         /// @param attribute The attribute that is associated with the scheduler
-        /// @param thread_count The number of threads to spawn
-        ActorScheduler(const Attribute& attribute, size_t thread_count);
-
-        /// @brief This will process a message from the managers beginning with
-        /// the first manager
-        /// @return \c true is a message was processed, \c false otherwise
-        bool ProcessOneMessage();
+        ActorScheduler(const Attribute& attribute);
 
     public:
         /// @brief The attribute that is associated with the scheduler
         const Attribute& attribute;
-
-        /// @brief The number of threads that were spawned by the scheduler
-        const size_t thread_count;
 
         /// @brief Stops and joins the threads
         ~ActorScheduler();
@@ -425,10 +411,7 @@ namespace crow {
         }
 
         /// @brief Signal the scheduler to stop and join the threads
-        inline void Stop() {
-            running = false;
-            for (auto& thread : threads) { thread.join(); }
-        }
+        inline void Stop() { running = false; }
 
         /// @brief Sends a message to any actor owned by the scheduler that
         /// accepts the message type
@@ -459,6 +442,11 @@ namespace crow {
             managers_lock.UnlockReading();
         }
 
+        /// @brief This will process a message from the managers beginning with
+        /// the first manager
+        /// @return \c true is a message was processed, \c false otherwise
+        bool ProcessOneMessage();
+
         /// @brief This allows any thread to process messages
         /// @param until_empty \c true will return when no messages are
         /// processed, \c false otherwise
@@ -467,28 +455,27 @@ namespace crow {
         /// @brief Blocks the calling thread until there are no more messages
         void BlockUntilEmpty() const;
 
+        /// @brief This determins if the scheduler is stopped
+        /// @return \c true when stopped, \c false otherwise
+        bool IsStopped() const { return !running; }
+
         /// @brief Returns the scheduler associated with an Attribute
         /// @param attribute The Attribute
         /// @return The scheduler
         static ActorScheduler* GetScheduler(const Attribute& attribute);
 
         /// @brief Creates a new scheduler that is associated with the
-        /// attribute. \c thread_count threads will also be spawned
         /// @param attribute The Attribute
-        /// @param thread_count The number of threads to spawn
         /// @return A pointer to the scheduler
         static std::unique_ptr<ActorScheduler>
-        CreateNewScheduler(const Attribute& attribute, size_t thread_count);
+        CreateNewScheduler(const Attribute& attribute);
 
         /// @brief This is the same as
         /// \code CreateNewScheduler(const Attribute&, size_t); \endcode except
         /// the Attribute is set to \c ATTRIBUTE_ACTOR_SCHEDULER_REGULAR
-        /// @param thread_count The number of threads to spawn
         /// @return A pointer to the scheduler
-        inline static std::unique_ptr<ActorScheduler>
-        CreateNewScheduler(size_t thread_count) {
-            return CreateNewScheduler(ATTRIBUTE_ACTOR_SCHEDULER_REGULAR,
-                                      thread_count);
+        inline static std::unique_ptr<ActorScheduler> CreateNewScheduler() {
+            return CreateNewScheduler(ATTRIBUTE_ACTOR_SCHEDULER_REGULAR);
         }
     };
 
