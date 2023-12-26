@@ -387,6 +387,8 @@ namespace crow {
         /// @tparam T The actor type to spawn
         template <typename T>
         void Spawn() {
+            static_assert(std::is_base_of_v<_InternalActorBase, T>);
+
             using MessageType = typename T::MessageType;
 
             static_assert(std::is_base_of_v<ActorBase<MessageType>, T>);
@@ -425,6 +427,31 @@ namespace crow {
 
             auto moved_msg =
                 std::unique_ptr<MessageBase>(new T(std::move(msg)));
+
+            managers_lock.LockReading();
+
+            if (managers.find(index) == managers.end()) {
+                // TODO What to do here?
+                return;
+            }
+
+            if (!managers[index]->HasActors()) {
+                // TODO What to do here?
+                return;
+            }
+
+            managers[index]->Receive(std::move(moved_msg));
+            managers_lock.UnlockReading();
+        }
+
+        template <typename J, typename T>
+        void SendMessageAs(T&& msg) {
+            static_assert(std::is_base_of_v<MessageBase, T>);
+            static_assert(std::is_base_of_v<MessageBase, J>);
+
+            std::type_index index{typeid(J)};
+
+            auto moved_msg = std::unique_ptr<MessageBase>(new T(std::move(msg)));
 
             managers_lock.LockReading();
 
@@ -499,7 +526,9 @@ namespace crow {
         scheduler->SendMessage(std::move(msg));
     }
 
-    struct API MessageBase {};
+    struct API MessageBase {
+        ~MessageBase() = default;
+    };
 
 }
 
