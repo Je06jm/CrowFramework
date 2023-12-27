@@ -3,6 +3,7 @@
 #include "GraphicsAPIs.hpp"
 
 #include <cassert>
+#include <iostream>
 
 namespace crow {
 
@@ -92,10 +93,15 @@ namespace crow {
             glfwSwapBuffers(window);
         }
 
-        bool Create() override {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        bool Create(Graphics::GraphicsAPI api) override {
+            if (api == Graphics::GraphicsAPI::OpenGL) {
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef DEBUG
+                glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
+            }
 
             window = glfwCreateWindow(width, height, title.c_str(), nullptr,
                                       nullptr);
@@ -103,6 +109,34 @@ namespace crow {
             if (!window) return false;
 
             Center();
+
+            if (api == Graphics::GraphicsAPI::OpenGL) {
+                glfwMakeContextCurrent(window);
+            }
+
+            int version = gladLoadGL(glfwGetProcAddress);
+
+            if (version == 0) {
+                glfwDestroyWindow(window);
+                window = nullptr;
+
+                return false;
+            }
+
+            if (api == Graphics::GraphicsAPI::OpenGL) {
+#ifdef DEBUG
+                int flags;
+                glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+
+                if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+                    glEnable(GL_DEBUG_OUTPUT);
+                    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+                    glDebugMessageCallback([](GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* params) {
+                        std::cout << "OpenGL Error: " << message << std::endl;
+                    }, nullptr);
+                }
+#endif
+            }
 
             return true;
         }

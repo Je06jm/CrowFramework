@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 
+#include "Graphics.hpp"
 #include "Actor.hpp"
 
 namespace crow {
@@ -69,7 +70,7 @@ namespace crow {
 
         /// @brief This creates the window
         /// @return \c true if the window was created, \c false otherwise
-        virtual bool Create() = 0;
+        virtual bool Create(Graphics::GraphicsAPI api) = 0;
 
         /// @brief Closes the window
         virtual void Close() = 0;

@@ -2,6 +2,7 @@
 
 #include <crow/Actor.hpp>
 #include <crow/Window.hpp>
+#include <crow/Graphics.hpp>
 
 #include <thread>
 
@@ -49,8 +50,30 @@ int main() {
 
     auto b_processor = std::jthread([&]() { b_scheduler->Run(); });
 
+    auto graphics = crow::Graphics::CreateGraphics();
+
     auto window = crow::Window::CreateWindow();
-    window->Create();
+    window->Create(graphics->api);
+
+    auto vert_buf = graphics->CreateVertexBuffer();
+    
+    {
+        struct Vert {
+            float x, y, z;
+        };
+
+        vert_buf->Create(crow::Buffer::Usage::StaticDraw, sizeof(Vert) * 3);
+        
+        Vert vert[] = {
+            {1, 0, 0}, {0, 1, 0}, {0, 0, 1}
+        };
+
+        auto verts = vert_buf->MapAs<Vert>(crow::Buffer::Access::WriteOnly);
+        verts[0] = vert[0];
+        verts[1] = vert[1];
+        verts[2] = vert[2];
+        vert_buf->Unmap();
+    }
 
     AMessage msg;
     msg.num = 1;
