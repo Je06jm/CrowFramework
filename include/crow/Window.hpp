@@ -28,7 +28,14 @@ namespace crow {
 
     /// @brief Manages the OpenGL/Vulkan/DirectX window
     class API Window {
+    protected:
+        const Graphics::GraphicsAPI api;
+
     public:
+        /// @brief This sets the graphics api that the window should use
+        /// @param api the graphics api to use
+        Window(Graphics::GraphicsAPI api) : api{api} {}
+
         /// @brief This does nothing, just a virtual deconstructor
         virtual ~Window() {}
 
@@ -61,6 +68,14 @@ namespace crow {
         /// @return The title
         virtual std::string GetTitle() const = 0;
 
+        /// @brief Sets the window's vsync
+        /// @param enable_vsync \c true if vsync should be enabled, \c false otherwise
+        virtual void SetVSync(bool enable_vsync) = 0;
+
+        /// @brief Returns the window's vsync
+        /// @return \c true if vsync is enabled, \c false otherwise
+        virtual bool GetVSync() const = 0;
+
         /// @brief Centers the window if it's not fullscreened
         virtual void Center() = 0;
 
@@ -70,7 +85,7 @@ namespace crow {
 
         /// @brief This creates the window
         /// @return \c true if the window was created, \c false otherwise
-        virtual bool Create(Graphics::GraphicsAPI api) = 0;
+        virtual bool Create() = 0;
 
         /// @brief Closes the window
         virtual void Close() = 0;
@@ -80,8 +95,9 @@ namespace crow {
         virtual bool ShouldClose() const = 0;
 
         /// @brief Creates a new window for the selected rendering API
+        /// @param api The graphics api to use
         /// @return A pointer to the new window
-        static std::unique_ptr<Window> CreateWindow();
+        static std::unique_ptr<Window> CreateWindow(Graphics::GraphicsAPI api);
     };
 
 }

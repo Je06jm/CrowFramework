@@ -52,8 +52,9 @@ int main() {
 
     auto graphics = crow::Graphics::CreateGraphics();
 
-    auto window = crow::Window::CreateWindow();
-    window->Create(graphics->api);
+    auto window = crow::Window::CreateWindow(graphics->api);
+    window->SetVSync(true);
+    window->Create();
 
     auto vert_buf = graphics->CreateVertexBuffer();
     

@@ -15,11 +15,12 @@ namespace crow {
         int height = 720;
 
         bool fullscreen = false;
+        bool vsync = true;
 
         std::string title = "Crow Framework";
 
     public:
-        CrossWindow() { glfwInit(); }
+        CrossWindow(Graphics::GraphicsAPI api) : Window(api) { glfwInit(); }
 
         ~CrossWindow() {
             if (window != nullptr) { glfwDestroyWindow(window); }
@@ -74,6 +75,18 @@ namespace crow {
 
         std::string GetTitle() const { return title; }
 
+        void SetVSync(bool enable_vsync) override {
+            vsync = enable_vsync;
+
+            if (window) {
+                if (api == Graphics::GraphicsAPI::OpenGL) {
+                    glfwSwapInterval(enable_vsync ? 1 : 0);
+                }
+            }
+        }
+
+        bool GetVSync() const override { return vsync; }
+
         void Center() override {
             if (!window) return;
 
@@ -93,7 +106,7 @@ namespace crow {
             glfwSwapBuffers(window);
         }
 
-        bool Create(Graphics::GraphicsAPI api) override {
+        bool Create() override {
             if (api == Graphics::GraphicsAPI::OpenGL) {
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -112,6 +125,8 @@ namespace crow {
 
             if (api == Graphics::GraphicsAPI::OpenGL) {
                 glfwMakeContextCurrent(window);
+
+                glfwSwapInterval(vsync ? 1 : 0);
             }
 
             int version = gladLoadGL(glfwGetProcAddress);
@@ -131,9 +146,14 @@ namespace crow {
                 if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
                     glEnable(GL_DEBUG_OUTPUT);
                     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-                    glDebugMessageCallback([](GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* params) {
-                        std::cout << "OpenGL Error: " << message << std::endl;
-                    }, nullptr);
+                    glDebugMessageCallback(
+                        [](GLenum source, GLenum type, unsigned int id,
+                           GLenum severity, GLsizei length, const char* message,
+                           const void* params) {
+                            std::cout << "OpenGL Error: " << message
+                                      << std::endl;
+                        },
+                        nullptr);
                 }
 #endif
             }
@@ -154,8 +174,8 @@ namespace crow {
         }
     };
 
-    std::unique_ptr<Window> Window::CreateWindow() {
-        return std::unique_ptr<Window>(new CrossWindow);
+    std::unique_ptr<Window> Window::CreateWindow(Graphics::GraphicsAPI api) {
+        return std::unique_ptr<Window>(new CrossWindow(api));
     }
 
 }
