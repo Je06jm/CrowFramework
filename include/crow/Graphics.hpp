@@ -53,6 +53,16 @@ namespace crow {
         virtual ~ElementBuffer() = default;
     };
 
+    class API UniformBuffer : public Buffer {
+    public:
+        virtual ~UniformBuffer() = default;
+    };
+
+    class API ShaderStorageBuffer : public Buffer {
+    public:
+        virtual ~ShaderStorageBuffer() = default;
+    };
+
     /*class API ShaderProgram {
     public:
         enum class Type {
@@ -80,6 +90,8 @@ namespace crow {
 
         virtual std::unique_ptr<VertexBuffer> CreateVertexBuffer() = 0;
         virtual std::unique_ptr<ElementBuffer> CreateElementBuffer() = 0;
+        virtual std::unique_ptr<UniformBuffer> CreateUniformBuffer() = 0;
+        virtual std::unique_ptr<ShaderStorageBuffer> CreateShaderStorageBuffer() = 0;
 
         static std::unique_ptr<Graphics> CreateGraphics(const std::set<GraphicsAPI>& apis);
         inline static std::unique_ptr<Graphics> CreateGraphics() {

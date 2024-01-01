@@ -18,23 +18,6 @@ namespace crow {
             glDeleteBuffers(1, &buffer);
         }
 
-        void* Map(Buffer::Access access) {
-            switch (access) {
-                case Buffer::Access::ReadOnly:
-                    return glMapBuffer(buffer, GL_READ_ONLY);
-                
-                case Buffer::Access::WriteOnly:
-                    return glMapBuffer(buffer, GL_WRITE_ONLY);
-                
-                default:
-                    return glMapBuffer(buffer, GL_READ_WRITE);
-            }
-        };
-
-        void Unmap() {
-            glUnmapBuffer(buffer);
-        }
-
         static GLenum GetOpenGLUsage(Buffer::Usage usage) {
             switch (usage) {
                 case Buffer::Usage::StaticCopy:
@@ -78,8 +61,25 @@ namespace crow {
         }
 
         void Destroy() override { OpenGLBuffer::Destroy(); }
-        void* Map(Access access) override { return OpenGLBuffer::Map(access); }
-        void Unmap() override { OpenGLBuffer::Unmap(); }
+
+        void* Map(Access access) override {
+            Bind();
+
+            switch (access) {
+                case Buffer::Access::ReadOnly:
+                    return glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+                
+                case Buffer::Access::WriteOnly:
+                    return glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+                
+                default:
+                    return glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+            }
+        }
+
+        void Unmap() override {
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
         
         void Bind() override {
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -97,11 +97,100 @@ namespace crow {
         }
 
         void Destroy() override { OpenGLBuffer::Destroy(); }
-        void* Map(Access access) override { return OpenGLBuffer::Map(access); }
-        void Unmap() override { OpenGLBuffer::Unmap(); }
+        
+        void* Map(Access access) override {
+            Bind();
+
+            switch (access) {
+                case Buffer::Access::ReadOnly:
+                    return glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+                
+                case Buffer::Access::WriteOnly:
+                    return glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+                
+                default:
+                    return glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+            }
+        }
+
+        void Unmap() override {
+            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        }
         
         void Bind() override {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
+        }
+    };
+
+    class OpenGLUniformBuffer : public UniformBuffer, public OpenGLBuffer {
+    public:
+        void Create(Usage usage, size_t size) override {
+            OpenGLBuffer::Create();
+            Bind();
+
+            GLenum gl_usage = GetOpenGLUsage(usage);
+            glBufferData(GL_UNIFORM_BUFFER, size, nullptr, gl_usage);
+        }
+
+        void Destroy() override { OpenGLBuffer::Destroy(); }
+
+        void* Map(Access access) override {
+            Bind();
+
+            switch (access) {
+                case Buffer::Access::ReadOnly:
+                    return glMapBuffer(GL_UNIFORM_BUFFER, GL_READ_ONLY);
+                
+                case Buffer::Access::WriteOnly:
+                    return glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+                
+                default:
+                    return glMapBuffer(GL_UNIFORM_BUFFER, GL_READ_WRITE);
+            }
+        }
+
+        void Unmap() override {
+            glUnmapBuffer(GL_UNIFORM_BUFFER);
+        }
+
+        void Bind() override {
+            glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+        }
+    };
+
+    class OpenGLShaderStorageBuffer : public ShaderStorageBuffer, public OpenGLBuffer {
+    public:
+        void Create(Usage usage, size_t size) override {
+            OpenGLBuffer::Create();
+            Bind();
+
+            GLenum gl_usage = GetOpenGLUsage(usage);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, gl_usage);
+        }
+
+        void Destroy() override { OpenGLBuffer::Destroy(); }
+
+        void* Map(Access access) override {
+            Bind();
+
+            switch (access) {
+                case Buffer::Access::ReadOnly:
+                    return glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+                
+                case Buffer::Access::WriteOnly:
+                    return glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+                
+                default:
+                    return glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
+            }
+        }
+
+        void Unmap() override {
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+        }
+
+        void Bind() override {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
         }
     };
 
@@ -111,6 +200,14 @@ namespace crow {
 
     std::unique_ptr<ElementBuffer> OpenGLGraphics::CreateElementBuffer() {
         return std::unique_ptr<ElementBuffer>(new OpenGLElementBuffer);
+    }
+
+    std::unique_ptr<UniformBuffer> OpenGLGraphics::CreateUniformBuffer() {
+        return std::unique_ptr<UniformBuffer>(new OpenGLUniformBuffer);
+    }
+
+    std::unique_ptr<ShaderStorageBuffer> OpenGLGraphics::CreateShaderStorageBuffer() {
+        return std::unique_ptr<ShaderStorageBuffer>(new OpenGLShaderStorageBuffer);
     }
 
 }

@@ -75,6 +75,56 @@ int main() {
         vert_buf->Unmap();
     }
 
+    auto elem_buffer = graphics->CreateElementBuffer();
+    
+    {
+        elem_buffer->Create(crow::Buffer::Usage::StaticDraw, sizeof(unsigned int) * 3);
+
+        unsigned int inds[] = {
+            0, 1, 2
+        };
+
+        auto elems = elem_buffer->MapAs<unsigned int>(crow::Buffer::Access::WriteOnly);
+        elems[0] = inds[0];
+        elems[1] = inds[1];
+        elems[2] = inds[2];
+        elem_buffer->Unmap();
+    }
+
+    auto uniform_buffer = graphics->CreateUniformBuffer();
+
+    {
+        uniform_buffer->Create(crow::Buffer::Usage::StaticDraw, sizeof(float) * 4);
+
+        float data[] = {
+            1.0f, 2.0f, 3.0f, 4.0f
+        };
+
+        auto buffer = uniform_buffer->MapAs<float>(crow::Buffer::Access::WriteOnly);
+        buffer[0] = data[0];
+        buffer[1] = data[1];
+        buffer[2] = data[2];
+        buffer[3] = data[3];
+        uniform_buffer->Unmap();
+    }
+
+    auto ss_buffer = graphics->CreateShaderStorageBuffer();
+
+    {
+        ss_buffer->Create(crow::Buffer::Usage::StaticDraw, sizeof(float) * 4);
+
+        float data[] = {
+            5, 6, 7, 8
+        };
+
+        auto buffer = ss_buffer->MapAs<float>(crow::Buffer::Access::WriteOnly);
+        buffer[0] = data[0];
+        buffer[1] = data[1];
+        buffer[2] = data[2];
+        buffer[3] = data[3];
+        ss_buffer->Unmap();
+    }
+
     AMessage msg;
     msg.num = 1;
 
