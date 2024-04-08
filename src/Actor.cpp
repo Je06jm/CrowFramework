@@ -8,93 +8,69 @@
 
 namespace crow {
 
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_RENDERING);
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_NON_CRITICAL);
-    CROW_DEFINE_ATTRIBUTE(ATTRIBUTE_ACTOR_SCHEDULER_REGULAR);
-
-    std::mutex ActorScheduler::schedulers_lock;
-    std::unordered_map<Attribute, ActorScheduler*> ActorScheduler::schedulers;
-
-    ActorScheduler::ActorScheduler(const Attribute& attribute)
-        : attribute{attribute} {
-        gen = std::mt19937(rd());
-    }
-
-    ActorScheduler::~ActorScheduler() {}
-
-    bool ActorScheduler::ProcessOneMessage() {
-        if (!running) return false;
-
-        managers_lock.LockReading();
-
-        for (auto& manager : managers) {
-            if (manager.second->ProcessOneMessage()) {
-                managers_lock.UnlockReading();
-
-                return true;
-            }
-        }
-
-        managers_lock.UnlockReading();
-        return false;
-    }
-
-    void ActorScheduler::Run(bool until_empty) {
-        while (running) {
-            if (!ProcessOneMessage()) {
-                if (until_empty) break;
-
-#ifdef WINDOWS
-                YieldProcessor();
-#else
-                sched_yield();
-#endif
-            }
-        }
-    }
-
-    void ActorScheduler::BlockUntilEmpty() const {
-        while (running) {
-            managers_lock.LockReading();
-
-            bool has_messages = false;
-            for (auto& manager : managers) {
-                if (manager.second->HasMessages()) {
-                    has_messages = true;
-                    break;
+    ActorScheduler::ActorScheduler(size_t thread_count) {
+        for (size_t i = 0; i < thread_count - 1; i++) {
+            threads.emplace_back(std::thread([&]() {
+                while (running) {
+                    if (!ProcessMessage(false)) YieldCPU();
                 }
-            }
-
-            managers_lock.UnlockReading();
-
-            if (!has_messages) break;
+            }));
         }
     }
 
-    ActorScheduler* ActorScheduler::GetScheduler(const Attribute& attribute) {
-        std::lock_guard<std::mutex> guard(schedulers_lock);
+    ActorScheduler::~ActorScheduler() {
+        running = false;
 
-        if (schedulers.find(attribute) == schedulers.end()) return nullptr;
-
-        return schedulers[attribute];
+        for (auto& thread : threads) thread.join();
     }
 
-    std::unique_ptr<ActorScheduler>
-    ActorScheduler::CreateNewScheduler(const Attribute& attribute) {
-        auto scheduler =
-            std::unique_ptr<ActorScheduler>(new ActorScheduler(attribute));
+    void ActorScheduler::YieldCPU() const {
+#ifdef WINDOWS
+        YieldProcessor();
+#else
+        sched_yield();
+#endif
+    }
 
-        {
-            std::lock_guard<std::mutex> guard(schedulers_lock);
+    bool ActorScheduler::ProcessMessage(bool is_main) {
+        ActorPtr actor = nullptr;
 
-            if (schedulers.find(attribute) != schedulers.end()) {
-                // TODO Error here
+        lock.lock();
+        if (is_main) {
+            if (main_to_do.size() != 0) {
+                actor = main_to_do.front();
+                main_to_do.erase(main_to_do.begin());
             }
-
-            schedulers[attribute] = scheduler.get();
+            else if (to_do.size() != 0) {
+                actor = to_do.front();
+                to_do.erase(to_do.begin());
+            }
         }
+        else if (to_do.size() != 0) {
+            actor = to_do.front();
+            to_do.erase(to_do.begin());
+        }
+        lock.unlock();
 
-        return scheduler;
+        if (!actor) return false;
+
+        working++;
+        actor->ProcessMessage();
+        working--;
+
+        return true;
     }
+
+    void ActorScheduler::ProcessAllMessages() {
+        while (true) {
+            if (ProcessMessage(true)) continue;
+
+            if (working > 0) continue;
+
+            break;
+        }
+    }
+
+    std::unique_ptr<ActorScheduler> actor_scheduler = nullptr;
 
 }
