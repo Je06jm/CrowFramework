@@ -1,12 +1,14 @@
 #include <crow/Window.hpp>
 
+#include <crow/Logging.hpp>
+
 #include "GraphicsAPIs.hpp"
 
 #include <cassert>
 
 namespace crow {
 
-    class CrossWindow : public Window {
+    class CrossWindow : public _InternalWindow {
     private:
         GLFWwindow* window = nullptr;
 
@@ -107,12 +109,6 @@ namespace crow {
             return true;
         }
 
-        void Close() override {
-            if (!window) return;
-
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-
         bool ShouldClose() const override {
             if (!window) return false;
 
@@ -120,8 +116,54 @@ namespace crow {
         }
     };
 
-    std::unique_ptr<Window> Window::CreateWindow() {
-        return std::unique_ptr<Window>(new CrossWindow);
+    std::unique_ptr<_InternalWindow> _InternalWindow::CreateWindow() {
+        return std::unique_ptr<_InternalWindow>(new CrossWindow);
+    }
+
+    Window::Window() {
+        window = _InternalWindow::CreateWindow();
+    }
+
+    void Window::HandleMessage(std::unique_ptr<WindowMessageBase>&& msg) {
+        if (auto get_res = dynamic_cast<WindowGetResolution*>(msg.get())) {
+            get_res->callback(window->GetResolution());
+        }
+        else if (auto get_full_res = dynamic_cast<WindowGetFullscreenResolution*>(msg.get())) {
+            get_full_res->callback(window->GetFullscreenResolution());
+        }
+        else if (auto set_res = dynamic_cast<WindowSetResolution*>(msg.get())) {
+            window->SetResolution(set_res->resolution);
+        }
+        else if (auto get_full = dynamic_cast<WindowGetFullscreen*>(msg.get())) {
+            get_full->callback(window->IsFullscreen());
+        }
+        else if (auto set_full = dynamic_cast<WindowSetFullscreen*>(msg.get())) {
+            window->SetFullscreen(set_full->fullscreen);
+        }
+        else if (auto get_title = dynamic_cast<WindowGetTitle*>(msg.get())) {
+            get_title->callback(window->GetTitle());
+        }
+        else if (auto set_title = dynamic_cast<WindowSetTitle*>(msg.get())) {
+            window->SetTitle(set_title->title);
+        }
+        else if (dynamic_cast<WindowCenter*>(msg.get())) {
+            window->Center();
+        }
+        else if (dynamic_cast<WindowUpdate*>(msg.get())) {
+            window->Update();
+        }
+        else if (dynamic_cast<WindowCreate*>(msg.get())) {
+            window->Create();
+        }
+        else if (auto should_close = dynamic_cast<WindowShouldClose*>(msg.get())) {
+            should_close->callback(window->ShouldClose());
+        }
+        else if (dynamic_cast<WindowClose*>(msg.get())) {
+            window = nullptr;
+        }
+        else {
+            engine::Error("Unhandled window message");
+        }
     }
 
 }

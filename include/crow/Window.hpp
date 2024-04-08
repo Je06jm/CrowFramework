@@ -4,32 +4,81 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <functional>
 
 #include "Actor.hpp"
 
 namespace crow {
 
-    /// @brief This message indicates that the window should change resolution
-    struct API WindowMessageSetResolution : public MessageBase {
-        std::tuple<int, int> resolution;
+    struct API WindowMessageBase {
+        virtual ~WindowMessageBase() = default;
+    };
+    struct API WindowGetResolution : public WindowMessageBase {
+        using Callback = std::function<void(const std::tuple<int, int>&)>;
+        const Callback callback;
+
+        WindowGetResolution(Callback callback) : callback{callback} {}
     };
 
-    /// @brief This message indicates that the window should/shouldn't be
-    /// fullscreened
-    struct API WindowMessageSetFullscreen : public MessageBase {
-        bool fullscreen;
+    struct API WindowGetFullscreenResolution : public WindowMessageBase {
+        using Callback = std::function<void(const std::tuple<int, int>&)>;
+        const Callback callback;
+
+        WindowGetFullscreenResolution(Callback callback) : callback{callback} {}
     };
 
-    /// @brief This message indicates that the window should change it's title
-    struct API WindowMessageSetTitle : public MessageBase {
-        std::string title;
+    struct API WindowSetResolution : public WindowMessageBase {
+        const std::tuple<int, int> resolution;
+
+        WindowSetResolution(const std::tuple<int, int>& resolution) : resolution{resolution} {}
     };
+
+    struct API WindowGetFullscreen : public WindowMessageBase {
+        using Callback = std::function<void(bool)>;
+        const Callback callback;
+
+        WindowGetFullscreen(Callback callback) : callback{callback} {}
+    };
+
+    struct API WindowSetFullscreen : public WindowMessageBase {
+        const bool fullscreen;
+
+        WindowSetFullscreen(const bool fullscreen) : fullscreen{fullscreen} {}
+    };
+
+    struct API WindowGetTitle : public WindowMessageBase {
+        using Callback = std::function<void(const std::string&)>;
+        const Callback callback;
+
+        WindowGetTitle(Callback callback) : callback{callback} {}
+    };
+
+    struct API WindowSetTitle : public WindowMessageBase {
+        const std::string title;
+
+        WindowSetTitle(const std::string& title) : title{title} {}
+    };
+
+    struct API WindowCenter : public WindowMessageBase {};
+
+    struct API WindowUpdate : public WindowMessageBase {};
+
+    struct API WindowCreate : public WindowMessageBase {};
+
+    struct API WindowShouldClose : public WindowMessageBase {
+        using Callback = std::function<void(bool)>;
+        const Callback callback;
+
+        WindowShouldClose(Callback callback) : callback{callback} {}
+    };
+
+    struct API WindowClose : public WindowMessageBase {};
 
     /// @brief Manages the OpenGL/Vulkan/DirectX window
-    class API Window {
+    class API _InternalWindow {
     public:
         /// @brief This does nothing, just a virtual deconstructor
-        virtual ~Window() {}
+        virtual ~_InternalWindow() {}
 
         /// @brief Sets the window's resolution
         /// @param resolution The resolution <width, height> of the window
@@ -71,16 +120,26 @@ namespace crow {
         /// @return \c true if the window was created, \c false otherwise
         virtual bool Create() = 0;
 
-        /// @brief Closes the window
-        virtual void Close() = 0;
-
         /// @brief Returns if the window should close
         /// @return \c true if it should close, \c false otherwise
         virtual bool ShouldClose() const = 0;
 
         /// @brief Creates a new window for the selected rendering API
         /// @return A pointer to the new window
-        static std::unique_ptr<Window> CreateWindow();
+        static std::unique_ptr<_InternalWindow> CreateWindow();
+    };
+
+    class API Window : public Actor<WindowMessageBase> {
+    private:
+        std::unique_ptr<_InternalWindow> window = nullptr;
+    
+    public:
+        Window();
+        ~Window() = default;
+
+        void HandleMessage(std::unique_ptr<WindowMessageBase>&& msg) override;
+
+        bool MainThreadOnly() const override { return true; }
     };
 
 }
